@@ -11,9 +11,172 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { toast } from "@/hooks/use-toast"
+import { useTheme } from "next-themes"
+import { Check, Loader2, Save } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export function SettingsTabs() {
   const [activeTab, setActiveTab] = useState("profile")
+  const { setTheme, theme } = useTheme()
+  const [fullName, setFullName] = useState("John Doe")
+  const [displayName, setDisplayName] = useState("johndoe")
+  const [bio, setBio] = useState(
+    "DevOps engineer with 5+ years of experience in cloud infrastructure and containerization.",
+  )
+  const [location, setLocation] = useState("San Francisco, CA")
+  const [website, setWebsite] = useState("https://johndoe.com")
+  const [email, setEmail] = useState("john.doe@example.com")
+  const [username, setUsername] = useState("johndoe")
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(true)
+  const [accentColor, setAccentColor] = useState("blue")
+  const [fontSize, setFontSize] = useState("medium")
+  const [isSaving, setIsSaving] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [successMessage, setSuccessMessage] = useState("")
+
+  const handleSaveProfile = () => {
+    setIsSaving(true)
+
+    // Simulate saving
+    setTimeout(() => {
+      setIsSaving(false)
+      setSuccessMessage("Profile updated successfully")
+      setShowSuccess(true)
+
+      // Hide success message after a delay
+      setTimeout(() => {
+        setShowSuccess(false)
+      }, 3000)
+
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been updated successfully",
+      })
+    }, 1500)
+  }
+
+  const handleUpdatePassword = () => {
+    if (!currentPassword) {
+      toast({
+        title: "Error",
+        description: "Please enter your current password",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Error",
+        description: "New passwords do not match",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsSaving(true)
+
+    // Simulate saving
+    setTimeout(() => {
+      setIsSaving(false)
+      setCurrentPassword("")
+      setNewPassword("")
+      setConfirmPassword("")
+
+      setSuccessMessage("Password updated successfully")
+      setShowSuccess(true)
+
+      // Hide success message after a delay
+      setTimeout(() => {
+        setShowSuccess(false)
+      }, 3000)
+
+      toast({
+        title: "Password Updated",
+        description: "Your password has been updated successfully",
+      })
+    }, 1500)
+  }
+
+  const handleGenerateCodes = () => {
+    toast({
+      title: "Recovery Codes Generated",
+      description: "New recovery codes have been generated and sent to your email",
+    })
+  }
+
+  const handleDeleteAccount = () => {
+    toast({
+      title: "Account Deletion Requested",
+      description: "A confirmation email has been sent to your email address",
+      variant: "destructive",
+    })
+  }
+
+  const handleChangeTheme = (newTheme: string) => {
+    setTheme(newTheme)
+    toast({
+      title: "Theme Changed",
+      description: `Theme has been changed to ${newTheme}`,
+    })
+  }
+
+  const handleChangeAccentColor = (color: string) => {
+    setAccentColor(color)
+
+    // In a real app, this would update the theme
+    document.documentElement.style.setProperty("--primary", `hsl(${getColorHue(color)} 100% 50%)`)
+
+    toast({
+      title: "Accent Color Changed",
+      description: `Accent color has been changed to ${color}`,
+    })
+  }
+
+  const getColorHue = (color: string): number => {
+    switch (color) {
+      case "blue":
+        return 210
+      case "green":
+        return 142
+      case "purple":
+        return 262
+      case "orange":
+        return 32
+      case "pink":
+        return 330
+      case "cyan":
+        return 186
+      default:
+        return 210
+    }
+  }
+
+  const handleChangeFontSize = (size: string) => {
+    setFontSize(size)
+    toast({
+      title: "Font Size Changed",
+      description: `Font size has been changed to ${size}`,
+    })
+  }
+
+  const handleCreateApiKey = () => {
+    toast({
+      title: "API Key Created",
+      description: "A new API key has been created",
+    })
+  }
+
+  const handleAddWebhook = () => {
+    toast({
+      title: "Webhook Added",
+      description: "A new webhook has been added",
+    })
+  }
 
   return (
     <Tabs defaultValue="profile" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
@@ -24,6 +187,14 @@ export function SettingsTabs() {
         <TabsTrigger value="notifications">Notifications</TabsTrigger>
         <TabsTrigger value="api">API</TabsTrigger>
       </TabsList>
+
+      {showSuccess && (
+        <Alert className="bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-900 dark:text-green-400">
+          <Check className="h-4 w-4" />
+          <AlertTitle>Success!</AlertTitle>
+          <AlertDescription>{successMessage}</AlertDescription>
+        </Alert>
+      )}
 
       <TabsContent value="profile" className="space-y-4">
         <Card>
@@ -46,30 +217,40 @@ export function SettingsTabs() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Full Name</Label>
-                    <Input id="name" defaultValue="John Doe" />
+                    <Input id="name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="display-name">Display Name</Label>
-                    <Input id="display-name" defaultValue="johndoe" />
+                    <Input id="display-name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="bio">Bio</Label>
-                  <Textarea
-                    id="bio"
-                    defaultValue="DevOps engineer with 5+ years of experience in cloud infrastructure and containerization."
-                  />
+                  <Textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="location">Location</Label>
-                    <Input id="location" defaultValue="San Francisco, CA" />
+                    <Input id="location" value={location} onChange={(e) => setLocation(e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="website">Website</Label>
-                    <Input id="website" defaultValue="https://johndoe.com" />
+                    <Input id="website" value={website} onChange={(e) => setWebsite(e.target.value)} />
                   </div>
                 </div>
+                <Button onClick={handleSaveProfile} disabled={isSaving}>
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Save Changes
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -113,28 +294,62 @@ export function SettingsTabs() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
-                <Input id="email" defaultValue="john.doe@example.com" />
+                <Input id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
-                <Input id="username" defaultValue="johndoe" />
+                <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
               </div>
             </div>
+            <Button onClick={handleSaveProfile} disabled={isSaving}>
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Update Account"
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Change Password</CardTitle>
+            <CardDescription>Update your password</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="current-password">Current Password</Label>
-              <Input id="current-password" type="password" />
+              <Input
+                id="current-password"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+              />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="new-password">New Password</Label>
-                <Input id="new-password" type="password" />
+                <Input
+                  id="new-password"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirm-password">Confirm New Password</Label>
-                <Input id="confirm-password" type="password" />
+                <Input
+                  id="confirm-password"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
               </div>
             </div>
-            <Button>Update Password</Button>
+            <Button onClick={handleUpdatePassword}>Update Password</Button>
           </CardContent>
         </Card>
 
@@ -149,14 +364,16 @@ export function SettingsTabs() {
                 <h3 className="font-medium">Two-Factor Authentication</h3>
                 <p className="text-sm text-muted-foreground">Protect your account with 2FA</p>
               </div>
-              <Switch defaultChecked />
+              <Switch checked={twoFactorEnabled} onCheckedChange={setTwoFactorEnabled} />
             </div>
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-medium">Recovery Codes</h3>
                 <p className="text-sm text-muted-foreground">Generate backup codes for account recovery</p>
               </div>
-              <Button variant="outline">Generate Codes</Button>
+              <Button variant="outline" onClick={handleGenerateCodes}>
+                Generate Codes
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -172,7 +389,9 @@ export function SettingsTabs() {
                 <h3 className="font-medium">Delete Account</h3>
                 <p className="text-sm text-muted-foreground">Permanently delete your account and all data</p>
               </div>
-              <Button variant="destructive">Delete Account</Button>
+              <Button variant="destructive" onClick={handleDeleteAccount}>
+                Delete Account
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -188,7 +407,11 @@ export function SettingsTabs() {
             <div className="space-y-2">
               <Label>Theme</Label>
               <div className="grid grid-cols-3 gap-2">
-                <Button variant="outline" className="justify-start">
+                <Button
+                  variant={theme === "light" ? "default" : "outline"}
+                  className="justify-start"
+                  onClick={() => handleChangeTheme("light")}
+                >
                   <svg
                     className="mr-2 h-4 w-4"
                     xmlns="http://www.w3.org/2000/svg"
@@ -211,7 +434,11 @@ export function SettingsTabs() {
                   </svg>
                   Light
                 </Button>
-                <Button variant="outline" className="justify-start">
+                <Button
+                  variant={theme === "dark" ? "default" : "outline"}
+                  className="justify-start"
+                  onClick={() => handleChangeTheme("dark")}
+                >
                   <svg
                     className="mr-2 h-4 w-4"
                     xmlns="http://www.w3.org/2000/svg"
@@ -226,7 +453,11 @@ export function SettingsTabs() {
                   </svg>
                   Dark
                 </Button>
-                <Button variant="outline" className="justify-start">
+                <Button
+                  variant={theme === "system" ? "default" : "outline"}
+                  className="justify-start"
+                  onClick={() => handleChangeTheme("system")}
+                >
                   <svg
                     className="mr-2 h-4 w-4"
                     xmlns="http://www.w3.org/2000/svg"
@@ -248,17 +479,35 @@ export function SettingsTabs() {
             <div className="space-y-2">
               <Label>Accent Color</Label>
               <div className="grid grid-cols-6 gap-2">
-                <div className="h-8 rounded-md bg-blue-500 cursor-pointer ring-2 ring-offset-2 ring-blue-500" />
-                <div className="h-8 rounded-md bg-green-500 cursor-pointer" />
-                <div className="h-8 rounded-md bg-purple-500 cursor-pointer" />
-                <div className="h-8 rounded-md bg-orange-500 cursor-pointer" />
-                <div className="h-8 rounded-md bg-pink-500 cursor-pointer" />
-                <div className="h-8 rounded-md bg-cyan-500 cursor-pointer" />
+                <div
+                  className={`h-8 rounded-md bg-blue-500 cursor-pointer ${accentColor === "blue" ? "ring-2 ring-offset-2 ring-blue-500" : ""}`}
+                  onClick={() => handleChangeAccentColor("blue")}
+                />
+                <div
+                  className={`h-8 rounded-md bg-green-500 cursor-pointer ${accentColor === "green" ? "ring-2 ring-offset-2 ring-green-500" : ""}`}
+                  onClick={() => handleChangeAccentColor("green")}
+                />
+                <div
+                  className={`h-8 rounded-md bg-purple-500 cursor-pointer ${accentColor === "purple" ? "ring-2 ring-offset-2 ring-purple-500" : ""}`}
+                  onClick={() => handleChangeAccentColor("purple")}
+                />
+                <div
+                  className={`h-8 rounded-md bg-orange-500 cursor-pointer ${accentColor === "orange" ? "ring-2 ring-offset-2 ring-orange-500" : ""}`}
+                  onClick={() => handleChangeAccentColor("orange")}
+                />
+                <div
+                  className={`h-8 rounded-md bg-pink-500 cursor-pointer ${accentColor === "pink" ? "ring-2 ring-offset-2 ring-pink-500" : ""}`}
+                  onClick={() => handleChangeAccentColor("pink")}
+                />
+                <div
+                  className={`h-8 rounded-md bg-cyan-500 cursor-pointer ${accentColor === "cyan" ? "ring-2 ring-offset-2 ring-cyan-500" : ""}`}
+                  onClick={() => handleChangeAccentColor("cyan")}
+                />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Font Size</Label>
-              <Select defaultValue="medium">
+              <Select value={fontSize} onValueChange={handleChangeFontSize}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select font size" />
                 </SelectTrigger>
@@ -269,6 +518,16 @@ export function SettingsTabs() {
                 </SelectContent>
               </Select>
             </div>
+            <Button onClick={handleSaveProfile} disabled={isSaving}>
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Appearance Settings"
+              )}
+            </Button>
           </CardContent>
         </Card>
       </TabsContent>
@@ -328,6 +587,16 @@ export function SettingsTabs() {
                 </div>
               </div>
             </div>
+            <Button onClick={handleSaveProfile} disabled={isSaving}>
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Notification Settings"
+              )}
+            </Button>
           </CardContent>
         </Card>
       </TabsContent>
@@ -368,7 +637,7 @@ export function SettingsTabs() {
                   </Button>
                 </div>
               </div>
-              <Button>Create New API Key</Button>
+              <Button onClick={handleCreateApiKey}>Create New API Key</Button>
             </div>
           </CardContent>
         </Card>
@@ -398,7 +667,7 @@ export function SettingsTabs() {
                   Edit
                 </Button>
               </div>
-              <Button>Add Webhook</Button>
+              <Button onClick={handleAddWebhook}>Add Webhook</Button>
             </div>
           </CardContent>
         </Card>

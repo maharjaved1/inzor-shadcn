@@ -1,13 +1,18 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Play, Square, RefreshCw, Trash2, Terminal, ExternalLink } from "lucide-react"
+import { Play, Square, RefreshCw, Trash2, Terminal, ExternalLink, Plus, Loader2, Check } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { ContainerTerminal } from "@/components/containers/container-terminal"
+import { toast } from "@/hooks/use-toast"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 const containers = [
   {
@@ -101,24 +106,173 @@ const images = [
 ]
 
 export function ContainerList() {
+  const router = useRouter()
   const [selectedContainer, setSelectedContainer] = useState<string | null>(null)
   const [showTerminal, setShowTerminal] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isActionInProgress, setIsActionInProgress] = useState<string | null>(null)
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [successMessage, setSuccessMessage] = useState("")
+
+  const handleStartContainer = (id: string, name: string) => {
+    setIsActionInProgress(id)
+
+    // Simulate starting container
+    setTimeout(() => {
+      setIsActionInProgress(null)
+
+      // Update container status in a real app
+      // For now, just show a success message
+      setSuccessMessage(`Container "${name}" started successfully`)
+      setShowSuccess(true)
+
+      // Hide success message after a delay
+      setTimeout(() => {
+        setShowSuccess(false)
+      }, 3000)
+
+      toast({
+        title: "Container Started",
+        description: `Container "${name}" has been started`,
+      })
+    }, 2000)
+  }
+
+  const handleStopContainer = (id: string, name: string) => {
+    setIsActionInProgress(id)
+
+    // Simulate stopping container
+    setTimeout(() => {
+      setIsActionInProgress(null)
+
+      // Update container status in a real app
+      // For now, just show a success message
+      setSuccessMessage(`Container "${name}" stopped successfully`)
+      setShowSuccess(true)
+
+      // Hide success message after a delay
+      setTimeout(() => {
+        setShowSuccess(false)
+      }, 3000)
+
+      toast({
+        title: "Container Stopped",
+        description: `Container "${name}" has been stopped`,
+      })
+    }, 2000)
+  }
+
+  const handleDeleteContainer = (id: string, name: string) => {
+    setIsActionInProgress(id)
+
+    // Simulate deleting container
+    setTimeout(() => {
+      setIsActionInProgress(null)
+
+      // Remove container from list in a real app
+      // For now, just show a success message
+      setSuccessMessage(`Container "${name}" deleted successfully`)
+      setShowSuccess(true)
+
+      // Hide success message after a delay
+      setTimeout(() => {
+        setShowSuccess(false)
+      }, 3000)
+
+      toast({
+        title: "Container Deleted",
+        description: `Container "${name}" has been deleted`,
+      })
+    }, 2000)
+  }
+
+  const handleRefreshContainer = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setIsRefreshing(true)
+
+    // Simulate refresh
+    setTimeout(() => {
+      setIsRefreshing(false)
+      toast({
+        title: "Refreshed",
+        description: "Container information has been updated",
+      })
+    }, 1500)
+  }
+
+  const handleOpenTerminal = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setSelectedContainer(id)
+    setShowTerminal(true)
+  }
+
+  const handleCloseTerminal = () => {
+    setShowTerminal(false)
+  }
+
+  const handleCreateContainer = () => {
+    router.push("/dashboard/containers/create")
+  }
+
+  const handleContainerClick = (id: string) => {
+    router.push(`/dashboard/containers/${id}`)
+  }
+
+  const handleRunImage = (id: string, name: string, tag: string) => {
+    setIsActionInProgress(id)
+
+    // Simulate running image
+    setTimeout(() => {
+      setIsActionInProgress(null)
+
+      // In a real app, this would create a new container
+      // For now, just show a success message
+      setSuccessMessage(`Image "${name}:${tag}" is now running as a new container`)
+      setShowSuccess(true)
+
+      // Hide success message after a delay
+      setTimeout(() => {
+        setShowSuccess(false)
+      }, 3000)
+
+      toast({
+        title: "Container Created",
+        description: `A new container from image "${name}:${tag}" is now running`,
+      })
+    }, 2000)
+  }
 
   return (
     <Tabs defaultValue="containers" className="space-y-4">
-      <TabsList>
-        <TabsTrigger value="containers">Containers</TabsTrigger>
-        <TabsTrigger value="images">Images</TabsTrigger>
-        <TabsTrigger value="volumes">Volumes</TabsTrigger>
-        <TabsTrigger value="networks">Networks</TabsTrigger>
-      </TabsList>
+      <div className="flex justify-between items-center">
+        <TabsList>
+          <TabsTrigger value="containers">Containers</TabsTrigger>
+          <TabsTrigger value="images">Images</TabsTrigger>
+          <TabsTrigger value="volumes">Volumes</TabsTrigger>
+          <TabsTrigger value="networks">Networks</TabsTrigger>
+        </TabsList>
+
+        <Button onClick={handleCreateContainer}>
+          <Plus className="h-4 w-4 mr-1" />
+          Create Container
+        </Button>
+      </div>
+
+      {showSuccess && (
+        <Alert className="bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-900 dark:text-green-400">
+          <Check className="h-4 w-4" />
+          <AlertTitle>Success!</AlertTitle>
+          <AlertDescription>{successMessage}</AlertDescription>
+        </Alert>
+      )}
+
       <TabsContent value="containers" className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {containers.map((container) => (
             <Card
               key={container.id}
               className={`cursor-pointer ${selectedContainer === container.id ? "ring-2 ring-primary" : ""}`}
-              onClick={() => setSelectedContainer(container.id)}
+              onClick={() => handleContainerClick(container.id)}
             >
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-start">
@@ -162,19 +316,67 @@ export function ContainerList() {
               <CardFooter className="pt-2">
                 <div className="flex justify-between w-full">
                   {container.status === "running" ? (
-                    <Button variant="outline" size="sm">
-                      <Square className="h-4 w-4 mr-1" />
-                      Stop
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleStopContainer(container.id, container.name)
+                      }}
+                      disabled={isActionInProgress === container.id}
+                    >
+                      {isActionInProgress === container.id ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                          Stopping...
+                        </>
+                      ) : (
+                        <>
+                          <Square className="h-4 w-4 mr-1" />
+                          Stop
+                        </>
+                      )}
                     </Button>
                   ) : (
-                    <Button variant="outline" size="sm">
-                      <Play className="h-4 w-4 mr-1" />
-                      Start
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleStartContainer(container.id, container.name)
+                      }}
+                      disabled={isActionInProgress === container.id}
+                    >
+                      {isActionInProgress === container.id ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                          Starting...
+                        </>
+                      ) : (
+                        <>
+                          <Play className="h-4 w-4 mr-1" />
+                          Start
+                        </>
+                      )}
                     </Button>
                   )}
                   <div className="flex gap-1">
-                    <Button variant="outline" size="icon" className="h-8 w-8">
-                      <RefreshCw className="h-4 w-4" />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={(e) => handleRefreshContainer(container.id, e)}
+                      disabled={isRefreshing}
+                    >
+                      <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={(e) => handleOpenTerminal(container.id, e)}
+                    >
+                      <Terminal className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="outline"
@@ -182,13 +384,15 @@ export function ContainerList() {
                       className="h-8 w-8"
                       onClick={(e) => {
                         e.stopPropagation()
-                        setShowTerminal(true)
+                        handleDeleteContainer(container.id, container.name)
                       }}
+                      disabled={isActionInProgress === container.id}
                     >
-                      <Terminal className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="icon" className="h-8 w-8">
-                      <Trash2 className="h-4 w-4" />
+                      {isActionInProgress === container.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -202,7 +406,7 @@ export function ContainerList() {
             <CardHeader className="pb-2">
               <div className="flex justify-between items-center">
                 <CardTitle className="text-lg">Container Terminal</CardTitle>
-                <Button variant="ghost" size="icon" onClick={() => setShowTerminal(false)}>
+                <Button variant="ghost" size="icon" onClick={handleCloseTerminal}>
                   <ExternalLink className="h-4 w-4" />
                 </Button>
               </div>
@@ -240,16 +444,46 @@ export function ContainerList() {
               </CardContent>
               <CardFooter className="pt-2">
                 <div className="flex justify-between w-full">
-                  <Button variant="outline" size="sm">
-                    <Play className="h-4 w-4 mr-1" />
-                    Run
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleRunImage(image.id, image.name, image.tag)}
+                    disabled={isActionInProgress === image.id}
+                  >
+                    {isActionInProgress === image.id ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                        Running...
+                      </>
+                    ) : (
+                      <>
+                        <Play className="h-4 w-4 mr-1" />
+                        Run
+                      </>
+                    )}
                   </Button>
                   <div className="flex gap-1">
-                    <Button variant="outline" size="icon" className="h-8 w-8">
-                      <RefreshCw className="h-4 w-4" />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={(e) => handleRefreshContainer(image.id, e)}
+                      disabled={isRefreshing}
+                    >
+                      <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
                     </Button>
-                    <Button variant="outline" size="icon" className="h-8 w-8">
-                      <Trash2 className="h-4 w-4" />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => handleDeleteContainer(image.id, `${image.name}:${image.tag}`)}
+                      disabled={isActionInProgress === image.id}
+                    >
+                      {isActionInProgress === image.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -265,7 +499,15 @@ export function ContainerList() {
             <CardDescription>Manage Docker volumes</CardDescription>
           </CardHeader>
           <CardContent>
-            <p>Volume management content will appear here</p>
+            <div className="flex items-center justify-center h-[200px] border rounded-md">
+              <div className="text-center">
+                <p className="text-muted-foreground mb-4">No volumes found</p>
+                <Button>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Create Volume
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </TabsContent>
@@ -276,7 +518,15 @@ export function ContainerList() {
             <CardDescription>Manage Docker networks</CardDescription>
           </CardHeader>
           <CardContent>
-            <p>Network management content will appear here</p>
+            <div className="flex items-center justify-center h-[200px] border rounded-md">
+              <div className="text-center">
+                <p className="text-muted-foreground mb-4">No custom networks found</p>
+                <Button>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Create Network
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </TabsContent>

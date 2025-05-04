@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Terminal } from "./terminal"
 import { DockerPanel } from "./docker-panel"
 import { Playground } from "./playground"
@@ -11,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import { useMobile } from "@/hooks/use-mobile"
+import { toast } from "@/hooks/use-toast"
 import {
   SidebarProvider,
   Sidebar,
@@ -23,9 +25,10 @@ import {
   SidebarTrigger,
   SidebarInset,
 } from "@/components/ui/sidebar"
-import { Database, GitBranch, Home, LayoutDashboard, Layers, Settings, TerminalIcon, Users } from "lucide-react"
+import { Database, GitBranch, Home, LayoutDashboard, Layers, Settings, Users } from "lucide-react"
 
 export default function Dashboard() {
+  const router = useRouter()
   const isMobile = useMobile()
   const [commandHistory, setCommandHistory] = useState<string[]>([])
   const [currentTenant, setCurrentTenant] = useState("personal")
@@ -37,11 +40,19 @@ export default function Dashboard() {
     // Simulate Docker check
     const checkDocker = setTimeout(() => {
       setIsDockerRunning(true)
+      toast({
+        title: "Docker Connected",
+        description: "Docker daemon is now running",
+      })
     }, 2000)
 
     // Simulate database check
     const checkDb = setTimeout(() => {
       setIsDbAvailable(true)
+      toast({
+        title: "Database Connected",
+        description: "Database connection established",
+      })
     }, 3500)
 
     return () => {
@@ -97,6 +108,10 @@ export default function Dashboard() {
     }
   }
 
+  const handleNavigation = (path: string) => {
+    router.push(path)
+  }
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen flex-col">
@@ -116,7 +131,7 @@ export default function Dashboard() {
             <SidebarContent>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive>
+                  <SidebarMenuButton asChild onClick={() => handleNavigation("/dashboard")}>
                     <a href="#">
                       <Home className="h-4 w-4" />
                       <span>Home</span>
@@ -124,7 +139,7 @@ export default function Dashboard() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild onClick={() => handleNavigation("/dashboard")}>
                     <a href="#">
                       <LayoutDashboard className="h-4 w-4" />
                       <span>Dashboard</span>
@@ -132,7 +147,7 @@ export default function Dashboard() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild onClick={() => handleNavigation("/dashboard/containers")}>
                     <a href="#">
                       <Layers className="h-4 w-4" />
                       <span>Containers</span>
@@ -140,7 +155,7 @@ export default function Dashboard() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild onClick={() => handleNavigation("/dashboard/github")}>
                     <a href="#">
                       <GitBranch className="h-4 w-4" />
                       <span>Git</span>
@@ -148,7 +163,7 @@ export default function Dashboard() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild onClick={() => handleNavigation("/dashboard/databases")}>
                     <a href="#">
                       <Database className="h-4 w-4" />
                       <span>Databases</span>
@@ -156,10 +171,10 @@ export default function Dashboard() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild onClick={() => handleNavigation("/dashboard/kubernetes")}>
                     <a href="#">
                       <Users className="h-4 w-4" />
-                      <span>Tenants</span>
+                      <span>Kubernetes</span>
                     </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -168,7 +183,7 @@ export default function Dashboard() {
             <SidebarFooter>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild onClick={() => handleNavigation("/dashboard/settings")}>
                     <a href="#">
                       <Settings className="h-4 w-4" />
                       <span>Settings</span>
@@ -253,27 +268,7 @@ export default function Dashboard() {
                             </div>
                             <div className="rounded-md border p-4">
                               <h4 className="font-medium mb-2">Branch Management</h4>
-                              <p className="text-sm text-muted-foreground mb-4">Manage Git branches</p>
-                              <div className="flex gap-2">
-                                <button
-                                  className="bg-primary text-primary-foreground px-3 py-2 rounded-md text-sm"
-                                  onClick={() => executeCommand("git checkout main")}
-                                >
-                                  Checkout main
-                                </button>
-                                <button
-                                  className="bg-secondary text-secondary-foreground px-3 py-2 rounded-md text-sm"
-                                  onClick={() => executeCommand("git checkout -b feature/new-branch")}
-                                >
-                                  Create branch
-                                </button>
-                                <button
-                                  className="bg-secondary text-secondary-foreground px-3 py-2 rounded-md text-sm"
-                                  onClick={() => executeCommand("git status")}
-                                >
-                                  Status
-                                </button>
-                              </div>
+                              <p className="text-sm text-muted-foreground mb-4">Manage your Git branches</p>
                             </div>
                           </div>
                         </div>
@@ -281,68 +276,14 @@ export default function Dashboard() {
                       <TabsContent value="database" className="h-[calc(100vh-16rem)]">
                         <div className="rounded-md border h-full p-4">
                           <h3 className="text-lg font-medium mb-4">Database Management</h3>
-                          {isDbAvailable ? (
-                            <div className="grid gap-4">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="rounded-md border p-4">
-                                  <h4 className="font-medium mb-2">Connection Status</h4>
-                                  <div className="flex items-center gap-2">
-                                    <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                                    <p className="text-sm">Connected to PostgreSQL</p>
-                                  </div>
-                                </div>
-                                <div className="rounded-md border p-4">
-                                  <h4 className="font-medium mb-2">Database Info</h4>
-                                  <div className="text-sm">
-                                    <p>Host: db.example.com</p>
-                                    <p>Port: 5432</p>
-                                    <p>User: tenant_{currentTenant}</p>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="rounded-md border p-4">
-                                <h4 className="font-medium mb-2">Database Actions</h4>
-                                <div className="flex gap-2">
-                                  <button
-                                    className="bg-primary text-primary-foreground px-3 py-2 rounded-md text-sm"
-                                    onClick={() => executeCommand("psql -U tenant_" + currentTenant)}
-                                  >
-                                    Connect
-                                  </button>
-                                  <button
-                                    className="bg-secondary text-secondary-foreground px-3 py-2 rounded-md text-sm"
-                                    onClick={() => executeCommand("pg_dump -U tenant_" + currentTenant)}
-                                  >
-                                    Backup
-                                  </button>
-                                  <button
-                                    className="bg-secondary text-secondary-foreground px-3 py-2 rounded-md text-sm"
-                                    onClick={() => executeCommand("database migrate")}
-                                  >
-                                    Migrate
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="flex flex-col items-center justify-center h-[calc(100%-2rem)]">
-                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                              <p className="mt-4 text-muted-foreground">Connecting to database...</p>
-                            </div>
-                          )}
+                          <p className="text-muted-foreground">Manage your databases</p>
                         </div>
                       </TabsContent>
                     </Tabs>
                   </ResizablePanel>
-                  <ResizableHandle />
+                  <ResizableHandle orientation={isMobile ? "horizontal" : "vertical"} />
                   <ResizablePanel defaultSize={40}>
-                    <div className="flex flex-col h-full">
-                      <div className="flex items-center px-4 py-2 border-b">
-                        <TerminalIcon className="h-4 w-4 mr-2" />
-                        <h3 className="text-sm font-medium">Terminal</h3>
-                      </div>
-                      <Terminal commandHistory={commandHistory} executeCommand={executeCommand} />
-                    </div>
+                    <Terminal commandHistory={commandHistory} executeCommand={executeCommand} />
                   </ResizablePanel>
                 </ResizablePanelGroup>
               </div>

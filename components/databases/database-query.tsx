@@ -1,18 +1,39 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
+import { Play, Download } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useToast } from "@/hooks/use-toast"
+
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Play } from "lucide-react"
+
+interface DatabaseQueryProps {
+  databaseName: string
+  databaseType: string
+}
+
+// Mock query results
+const mockResults = {
+  columns: ["id", "name", "email", "created_at"],
+  rows: [
+    { id: 1, name: "John Doe", email: "john@example.com", created_at: "2023-01-15T10:30:00Z" },
+    { id: 2, name: "Jane Smith", email: "jane@example.com", created_at: "2023-02-20T14:45:00Z" },
+    { id: 3, name: "Bob Johnson", email: "bob@example.com", created_at: "2023-03-10T08:00:00Z" },
+    { id: 4, name: "Alice Brown", email: "alice@example.com", created_at: "2023-04-05T16:20:00Z" },
+    { id: 5, name: "Charlie Davis", email: "charlie@example.com", created_at: "2023-05-01T12:00:00Z" },
+  ],
+}
 
 export function DatabaseQuery() {
   const [query, setQuery] = useState("SELECT * FROM users LIMIT 10;")
   const [results, setResults] = useState<any[] | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { toast } = useToast()
 
   const executeQuery = () => {
     setIsLoading(true)
@@ -24,13 +45,7 @@ export function DatabaseQuery() {
 
       if (query.toLowerCase().includes("select")) {
         // Mock results for SELECT queries
-        setResults([
-          { id: 1, name: "John Doe", email: "john@example.com", created_at: "2023-01-15" },
-          { id: 2, name: "Jane Smith", email: "jane@example.com", created_at: "2023-02-20" },
-          { id: 3, name: "Bob Johnson", email: "bob@example.com", created_at: "2023-03-10" },
-          { id: 4, name: "Alice Brown", email: "alice@example.com", created_at: "2023-04-05" },
-          { id: 5, name: "Charlie Davis", email: "charlie@example.com", created_at: "2023-05-01" },
-        ])
+        setResults(mockResults.rows)
       } else if (
         query.toLowerCase().includes("insert") ||
         query.toLowerCase().includes("update") ||
@@ -39,10 +54,20 @@ export function DatabaseQuery() {
         // Mock results for modification queries
         setResults(null)
         setError("Write operations are not allowed in the demo")
+        toast({
+          title: "Error",
+          description: "Write operations are not allowed in the demo.",
+          variant: "destructive",
+        })
       } else {
         // Mock error for other queries
         setResults(null)
         setError("Invalid query or operation not supported")
+        toast({
+          title: "Error",
+          description: "Invalid query or operation not supported.",
+          variant: "destructive",
+        })
       }
     }, 1000)
   }
@@ -91,35 +116,38 @@ export function DatabaseQuery() {
       )}
 
       {results && (
-        <div className="border rounded-md">
-          <ScrollArea className="h-[300px]">
-            <div className="p-1">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-muted">
-                    {Object.keys(results[0]).map((key) => (
-                      <th key={key} className="p-2 text-left font-medium">
-                        {key}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {results.map((row, i) => (
-                    <tr key={i} className="border-t">
-                      {Object.values(row).map((value, j) => (
-                        <td key={j} className="p-2">
-                          {value as React.ReactNode}
-                        </td>
-                      ))}
-                    </tr>
+        <Card>
+          <CardHeader>
+            <CardTitle>Query Results</CardTitle>
+            <CardDescription>{results.length} rows returned</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ScrollArea>
+              <Table>
+                <TableHeader>
+                  {mockResults.columns.map((column) => (
+                    <TableHead key={column}>{column}</TableHead>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </ScrollArea>
-          <div className="bg-muted p-2 text-sm text-muted-foreground">{results.length} rows returned</div>
-        </div>
+                </TableHeader>
+                <TableBody>
+                  {results.map((row, index) => (
+                    <TableRow key={index}>
+                      {mockResults.columns.map((column) => (
+                        <TableCell key={column}>{row[column] ? row[column].toString() : "null"}</TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          </CardContent>
+          <CardFooter>
+            <Button>
+              <Download className="mr-2 h-4 w-4" />
+              Download CSV
+            </Button>
+          </CardFooter>
+        </Card>
       )}
     </div>
   )

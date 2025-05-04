@@ -1,238 +1,353 @@
 "use client"
 
 import { useState } from "react"
-import { AlertCircle, Copy, GitBranch, GitPullRequest, RefreshCw } from "lucide-react"
-import { toast } from "@/hooks/use-toast"
-
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Textarea } from "@/components/ui/textarea"
-import { Terminal } from "@/components/ui/terminal"
+import { toast } from "@/hooks/use-toast"
+import { GitBranch, GitMerge, Loader2 } from "lucide-react"
 
 export function GitIntegration() {
   const [repoUrl, setRepoUrl] = useState("")
   const [branch, setBranch] = useState("main")
-  const [loading, setLoading] = useState(false)
-  const [output, setOutput] = useState("")
-  const [activeTab, setActiveTab] = useState("clone")
+  const [isCloning, setIsCloning] = useState(false)
+  const [isPulling, setIsPulling] = useState(false)
+  const [isMerging, setIsMerging] = useState(false)
 
-  const handleGitAction = async (action: string) => {
-    setLoading(true)
-    setOutput("")
-
-    // Simulate git command execution
-    let command = ""
-    let simulatedOutput = ""
-
-    switch (action) {
-      case "clone":
-        command = `git clone ${repoUrl} -b ${branch}`
-        simulatedOutput = `Cloning into '${repoUrl.split("/").pop()?.replace(".git", "")}'...
-remote: Enumerating objects: 1325, done.
-remote: Counting objects: 100% (1325/1325), done.
-remote: Compressing objects: 100% (890/890), done.
-remote: Total 1325 (delta 435), reused 1325 (delta 435), pack-reused 0
-Receiving objects: 100% (1325/1325), 2.56 MiB | 8.42 MiB/s, done.
-Resolving deltas: 100% (435/435), done.`
-        break
-      case "pull":
-        command = `git pull origin ${branch}`
-        simulatedOutput = `From ${repoUrl.split("//")[1]}
- * branch            ${branch}     -> FETCH_HEAD
-Updating a1b2c3d..e4f5g6h
-Fast-forward
- README.md       | 15 +++++++++------
- src/index.js    | 23 +++++++++++++++++++++++
- 2 files changed, 32 insertions(+), 6 deletions(-)`
-        break
-      case "fetch":
-        command = `git fetch origin ${branch}`
-        simulatedOutput = `From ${repoUrl.split("//")[1]}
- * branch            ${branch}     -> FETCH_HEAD`
-        break
-      default:
-        simulatedOutput = "Unknown command"
+  const handleCloneRepo = () => {
+    if (!repoUrl) {
+      toast({
+        title: "Error",
+        description: "Repository URL is required",
+        variant: "destructive",
+      })
+      return
     }
 
-    // Simulate typing effect for the output
-    let i = 0
-    const interval = setInterval(() => {
-      if (i < simulatedOutput.length) {
-        setOutput((prev) => prev + simulatedOutput.charAt(i))
-        i++
-      } else {
-        clearInterval(interval)
-        setLoading(false)
-        toast({
-          title: "Git operation completed",
-          description: `Successfully executed: ${command}`,
-        })
-      }
-    }, 10)
+    setIsCloning(true)
+
+    // Simulate cloning repository
+    setTimeout(() => {
+      setIsCloning(false)
+      toast({
+        title: "Repository Cloned",
+        description: `Successfully cloned repository from ${repoUrl}`,
+      })
+    }, 2000)
   }
 
-  const copyCommand = (command: string) => {
-    navigator.clipboard.writeText(command)
-    toast({
-      title: "Copied to clipboard",
-      description: "Git command copied to clipboard",
-    })
+  const handlePullChanges = () => {
+    setIsPulling(true)
+
+    // Simulate pulling changes
+    setTimeout(() => {
+      setIsPulling(false)
+      toast({
+        title: "Changes Pulled",
+        description: `Successfully pulled latest changes from ${branch}`,
+      })
+    }, 1500)
+  }
+
+  const handleMergeBranch = () => {
+    setIsMerging(true)
+
+    // Simulate merging branches
+    setTimeout(() => {
+      setIsMerging(false)
+      toast({
+        title: "Branches Merged",
+        description: `Successfully merged feature branch into ${branch}`,
+      })
+    }, 2000)
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <GitBranch className="h-5 w-5" />
-          Git Repository Integration
-        </CardTitle>
-        <CardDescription>Clone, pull, or fetch from Git repositories to deploy your applications</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="clone" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="clone">Clone</TabsTrigger>
-            <TabsTrigger value="pull">Pull</TabsTrigger>
-            <TabsTrigger value="fetch">Fetch</TabsTrigger>
-          </TabsList>
-          <TabsContent value="clone" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="repo-url">Repository URL</Label>
-              <Input
-                id="repo-url"
-                placeholder="https://github.com/username/repo.git"
-                value={repoUrl}
-                onChange={(e) => setRepoUrl(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="branch">Branch</Label>
-              <Input id="branch" placeholder="main" value={branch} onChange={(e) => setBranch(e.target.value)} />
-            </div>
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Info</AlertTitle>
-              <AlertDescription>This will clone the repository to your container's filesystem.</AlertDescription>
-            </Alert>
-          </TabsContent>
-          <TabsContent value="pull" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="repo-url-pull">Repository URL</Label>
-              <Input
-                id="repo-url-pull"
-                placeholder="https://github.com/username/repo.git"
-                value={repoUrl}
-                onChange={(e) => setRepoUrl(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="branch-pull">Branch</Label>
-              <Input id="branch-pull" placeholder="main" value={branch} onChange={(e) => setBranch(e.target.value)} />
-            </div>
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Info</AlertTitle>
-              <AlertDescription>This will pull the latest changes from the specified branch.</AlertDescription>
-            </Alert>
-          </TabsContent>
-          <TabsContent value="fetch" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="repo-url-fetch">Repository URL</Label>
-              <Input
-                id="repo-url-fetch"
-                placeholder="https://github.com/username/repo.git"
-                value={repoUrl}
-                onChange={(e) => setRepoUrl(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="branch-fetch">Branch</Label>
-              <Input id="branch-fetch" placeholder="main" value={branch} onChange={(e) => setBranch(e.target.value)} />
-            </div>
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Info</AlertTitle>
-              <AlertDescription>This will fetch the remote branch without merging changes.</AlertDescription>
-            </Alert>
-          </TabsContent>
-        </Tabs>
+    <div className="space-y-4">
+      <Tabs defaultValue="repository" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="repository">Repository</TabsTrigger>
+          <TabsTrigger value="branches">Branches</TabsTrigger>
+          <TabsTrigger value="commits">Commits</TabsTrigger>
+          <TabsTrigger value="pull-requests">Pull Requests</TabsTrigger>
+        </TabsList>
 
-        <div className="mt-6">
-          <div className="flex items-center justify-between mb-2">
-            <Label>Command Preview</Label>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 gap-1"
-              onClick={() => {
-                let command = ""
-                switch (activeTab) {
-                  case "clone":
-                    command = `git clone ${repoUrl} -b ${branch}`
-                    break
-                  case "pull":
-                    command = `git pull origin ${branch}`
-                    break
-                  case "fetch":
-                    command = `git fetch origin ${branch}`
-                    break
-                }
-                copyCommand(command)
-              }}
-            >
-              <Copy className="h-3.5 w-3.5" />
-              <span>Copy</span>
-            </Button>
-          </div>
-          <div className="relative">
-            <Textarea
-              readOnly
-              className="font-mono text-sm h-16 resize-none bg-muted"
-              value={
-                activeTab === "clone"
-                  ? `git clone ${repoUrl} -b ${branch}`
-                  : activeTab === "pull"
-                    ? `git pull origin ${branch}`
-                    : `git fetch origin ${branch}`
-              }
-            />
-          </div>
-        </div>
+        <TabsContent value="repository" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Repository Management</CardTitle>
+              <CardDescription>Clone and manage Git repositories</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="repo-url">Repository URL</Label>
+                    <Input
+                      id="repo-url"
+                      placeholder="https://github.com/username/repository.git"
+                      value={repoUrl}
+                      onChange={(e) => setRepoUrl(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="branch">Branch</Label>
+                    <Select value={branch} onValueChange={setBranch}>
+                      <SelectTrigger id="branch">
+                        <SelectValue placeholder="Select a branch" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="main">main</SelectItem>
+                        <SelectItem value="master">master</SelectItem>
+                        <SelectItem value="develop">develop</SelectItem>
+                        <SelectItem value="feature/new-feature">feature/new-feature</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button onClick={handleCloneRepo} disabled={isCloning} className="w-full">
+                    {isCloning ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Cloning...
+                      </>
+                    ) : (
+                      <>
+                        <GitBranch className="mr-2 h-4 w-4" />
+                        Clone Repository
+                      </>
+                    )}
+                  </Button>
+                </div>
 
-        {output && (
-          <div className="mt-4">
-            <Label className="mb-2 block">Output</Label>
-            <Terminal className="h-48">{output}</Terminal>
-          </div>
-        )}
-      </CardContent>
-      <CardFooter>
-        <Button className="w-full gap-2" onClick={() => handleGitAction(activeTab)} disabled={!repoUrl || loading}>
-          {loading ? (
-            <>
-              <RefreshCw className="h-4 w-4 animate-spin" />
-              <span>Processing...</span>
-            </>
-          ) : (
-            <>
-              {activeTab === "clone" ? (
-                <GitBranch className="h-4 w-4" />
-              ) : activeTab === "pull" ? (
-                <GitPullRequest className="h-4 w-4" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
-              )}
-              <span>
-                {activeTab === "clone" ? "Clone Repository" : activeTab === "pull" ? "Pull Changes" : "Fetch Updates"}
-              </span>
-            </>
-          )}
-        </Button>
-      </CardFooter>
-    </Card>
+                <div className="space-y-4">
+                  <div className="font-medium">Recent Repositories</div>
+                  <div className="rounded-md border divide-y">
+                    <div className="p-3 flex justify-between items-center">
+                      <div>
+                        <div className="font-medium">cloud-platform</div>
+                        <div className="text-sm text-muted-foreground">Last updated: 2 days ago</div>
+                      </div>
+                      <Button variant="outline" size="sm" onClick={handlePullChanges} disabled={isPulling}>
+                        {isPulling ? (
+                          <>
+                            <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                            Pulling...
+                          </>
+                        ) : (
+                          "Pull"
+                        )}
+                      </Button>
+                    </div>
+                    <div className="p-3 flex justify-between items-center">
+                      <div>
+                        <div className="font-medium">kubernetes-operator</div>
+                        <div className="text-sm text-muted-foreground">Last updated: 1 week ago</div>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        Pull
+                      </Button>
+                    </div>
+                    <div className="p-3 flex justify-between items-center">
+                      <div>
+                        <div className="font-medium">database-migration-tool</div>
+                        <div className="text-sm text-muted-foreground">Last updated: 3 days ago</div>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        Pull
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="branches" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Branch Management</CardTitle>
+              <CardDescription>Manage Git branches and merges</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="source-branch">Source Branch</Label>
+                    <Select defaultValue="feature/new-feature">
+                      <SelectTrigger id="source-branch">
+                        <SelectValue placeholder="Select source branch" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="feature/new-feature">feature/new-feature</SelectItem>
+                        <SelectItem value="feature/bug-fix">feature/bug-fix</SelectItem>
+                        <SelectItem value="hotfix/security-patch">hotfix/security-patch</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="target-branch">Target Branch</Label>
+                    <Select defaultValue="main">
+                      <SelectTrigger id="target-branch">
+                        <SelectValue placeholder="Select target branch" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="main">main</SelectItem>
+                        <SelectItem value="develop">develop</SelectItem>
+                        <SelectItem value="staging">staging</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button onClick={handleMergeBranch} disabled={isMerging} className="w-full">
+                    {isMerging ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Merging...
+                      </>
+                    ) : (
+                      <>
+                        <GitMerge className="mr-2 h-4 w-4" />
+                        Merge Branches
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="font-medium">Active Branches</div>
+                  <div className="rounded-md border divide-y">
+                    <div className="p-3 flex justify-between items-center">
+                      <div className="flex items-center">
+                        <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
+                        <div>
+                          <div className="font-medium">main</div>
+                          <div className="text-sm text-muted-foreground">Default branch</div>
+                        </div>
+                      </div>
+                      <div className="text-sm text-muted-foreground">2 days ago</div>
+                    </div>
+                    <div className="p-3 flex justify-between items-center">
+                      <div className="flex items-center">
+                        <div className="h-2 w-2 rounded-full bg-blue-500 mr-2"></div>
+                        <div>
+                          <div className="font-medium">develop</div>
+                          <div className="text-sm text-muted-foreground">Development branch</div>
+                        </div>
+                      </div>
+                      <div className="text-sm text-muted-foreground">12 hours ago</div>
+                    </div>
+                    <div className="p-3 flex justify-between items-center">
+                      <div className="flex items-center">
+                        <div className="h-2 w-2 rounded-full bg-purple-500 mr-2"></div>
+                        <div>
+                          <div className="font-medium">feature/new-feature</div>
+                          <div className="text-sm text-muted-foreground">New dashboard feature</div>
+                        </div>
+                      </div>
+                      <div className="text-sm text-muted-foreground">3 hours ago</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="commits" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Commit History</CardTitle>
+              <CardDescription>View and manage Git commits</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border divide-y">
+                <div className="p-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-medium">Update dashboard UI components</div>
+                      <div className="text-sm text-muted-foreground">John Doe • 3 hours ago</div>
+                    </div>
+                    <div className="text-sm font-mono bg-muted px-2 py-1 rounded">a8c7b9d</div>
+                  </div>
+                  <div className="mt-2 text-sm">Improved responsive layout and fixed styling issues</div>
+                </div>
+                <div className="p-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-medium">Fix container creation bug</div>
+                      <div className="text-sm text-muted-foreground">Jane Smith • 1 day ago</div>
+                    </div>
+                    <div className="text-sm font-mono bg-muted px-2 py-1 rounded">b2e4f6c</div>
+                  </div>
+                  <div className="mt-2 text-sm">Fixed issue with container volume mounting</div>
+                </div>
+                <div className="p-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-medium">Add Kubernetes integration</div>
+                      <div className="text-sm text-muted-foreground">Mike Johnson • 2 days ago</div>
+                    </div>
+                    <div className="text-sm font-mono bg-muted px-2 py-1 rounded">d5f8g9h</div>
+                  </div>
+                  <div className="mt-2 text-sm">Implemented Kubernetes cluster management features</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="pull-requests" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Pull Requests</CardTitle>
+              <CardDescription>Manage and review pull requests</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border divide-y">
+                <div className="p-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-medium">Feature: New Dashboard UI</div>
+                      <div className="text-sm text-muted-foreground">PR #42 • Opened by John Doe</div>
+                    </div>
+                    <div className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-500 text-xs px-2 py-1 rounded-full">
+                      Review Needed
+                    </div>
+                  </div>
+                  <div className="mt-2 text-sm">feature/dashboard-ui → main</div>
+                </div>
+                <div className="p-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-medium">Fix: Container Volume Mounting</div>
+                      <div className="text-sm text-muted-foreground">PR #41 • Opened by Jane Smith</div>
+                    </div>
+                    <div className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-500 text-xs px-2 py-1 rounded-full">
+                      Approved
+                    </div>
+                  </div>
+                  <div className="mt-2 text-sm">fix/volume-mount → main</div>
+                </div>
+                <div className="p-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-medium">Feature: Kubernetes Integration</div>
+                      <div className="text-sm text-muted-foreground">PR #40 • Opened by Mike Johnson</div>
+                    </div>
+                    <div className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-500 text-xs px-2 py-1 rounded-full">
+                      Merged
+                    </div>
+                  </div>
+                  <div className="mt-2 text-sm">feature/kubernetes → main</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   )
 }

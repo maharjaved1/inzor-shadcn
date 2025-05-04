@@ -1,19 +1,21 @@
-import type { Metadata } from "next"
 import { GitHubHeader } from "@/components/github/github-header"
 import { GitHubRepositories } from "@/components/github/github-repositories"
 import { GitHubActions } from "@/components/github/github-actions"
-
-export const metadata: Metadata = {
-  title: "GitHub | CloudPlatform",
-  description: "Manage your GitHub repositories and workflows",
-}
+import { GitHubPullRequests } from "@/components/github/github-pull-requests"
+import { GitHubIssues } from "@/components/github/github-issues"
 
 export default function GitHubPage() {
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+    <div className="flex flex-col gap-6">
       <GitHubHeader />
-      <GitHubRepositories />
-      <GitHubActions />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <GitHubRepositories />
+        <GitHubActions />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <GitHubPullRequests />
+        <GitHubIssues />
+      </div>
     </div>
   )
 }

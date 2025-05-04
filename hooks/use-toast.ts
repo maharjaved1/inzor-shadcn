@@ -2,16 +2,14 @@
 
 // Inspired by react-hot-toast library
 import * as React from "react"
+import { toast as sonnerToast } from "sonner"
 
-import type {
-  ToastActionElement,
-  ToastProps,
-} from "@/components/ui/toast"
+import type { ToastActionElement, ToastProps as ReactToastProps } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
 
-type ToasterToast = ToastProps & {
+type ToasterToast = ReactToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
@@ -85,9 +83,7 @@ export const reducer = (state: State, action: Action): State => {
     case "UPDATE_TOAST":
       return {
         ...state,
-        toasts: state.toasts.map((t) =>
-          t.id === action.toast.id ? { ...t, ...action.toast } : t
-        ),
+        toasts: state.toasts.map((t) => (t.id === action.toast.id ? { ...t, ...action.toast } : t)),
       }
 
     case "DISMISS_TOAST": {
@@ -111,7 +107,7 @@ export const reducer = (state: State, action: Action): State => {
                 ...t,
                 open: false,
               }
-            : t
+            : t,
         ),
       }
     }
@@ -142,33 +138,51 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, "id">
 
-function toast({ ...props }: Toast) {
-  const id = genId()
+// function toast({ ...props }: Toast) {
+//   const id = genId()
 
-  const update = (props: ToasterToast) =>
-    dispatch({
-      type: "UPDATE_TOAST",
-      toast: { ...props, id },
+//   const update = (props: ToasterToast) =>
+//     dispatch({
+//       type: "UPDATE_TOAST",
+//       toast: { ...props, id },
+//     })
+//   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
+
+//   dispatch({
+//     type: "ADD_TOAST",
+//     toast: {
+//       ...props,
+//       id,
+//       open: true,
+//       onOpenChange: (open) => {
+//         if (!open) dismiss()
+//       },
+//     },
+//   })
+
+//   return {
+//     id: id,
+//     dismiss,
+//     update,
+//   }
+// }
+
+type ToastProps = {
+  title: string
+  description?: string
+  variant?: "default" | "destructive"
+}
+
+function toast({ title, description, variant = "default" }: ToastProps) {
+  if (variant === "destructive") {
+    return sonnerToast.error(title, {
+      description,
     })
-  const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
-
-  dispatch({
-    type: "ADD_TOAST",
-    toast: {
-      ...props,
-      id,
-      open: true,
-      onOpenChange: (open) => {
-        if (!open) dismiss()
-      },
-    },
-  })
-
-  return {
-    id: id,
-    dismiss,
-    update,
   }
+
+  return sonnerToast(title, {
+    description,
+  })
 }
 
 function useToast() {
